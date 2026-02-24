@@ -841,8 +841,117 @@ body {
   </div>
 </div>
 <script>
-async function send(preset) {
-  const text = preset || inputEl.value.trim();
+<script>
+/* ── PARTICLES (Tera original logic) ── */
+(function() {
+  const amb = document.querySelector('.ambient');
+  if(!amb) return;
+  for (let i = 0; i < 22; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 3 + 1.5;
+    const dx = (Math.random() - 0.5) * 80;
+    p.style.cssText = `
+      left: ${Math.random() * 100}%;
+      bottom: -10px;
+      width: ${size}px;
+      height: ${size}px;
+      opacity: 0;
+      --dx: ${dx}px;
+      animation-duration: ${Math.random() * 12 + 10}s;
+      animation-delay: ${Math.random() * 12}s;
+      background: hsl(${230 + Math.random()*40}, 70%, 70%);
+    `;
+    amb.appendChild(p);
+  }
+})();
+
+/* ── CONFIG ── */
+let history  = [];
+let loading  = false;
+let lastRole = null;
+let atBottom = true;
+
+const msgsEl    = document.getElementById('messages');
+const innerEl   = document.querySelector('.msgs-inner');
+const typingEl  = document.getElementById('typing-row');
+const welcomeEl = document.getElementById('welcome');
+const inputEl   = document.getElementById('user-input');
+const sendEl    = document.getElementById('send-btn');
+
+/* Scroll Logic */
+msgsEl.addEventListener('scroll', () => {
+  const d = msgsEl.scrollHeight - msgsEl.scrollTop - msgsEl.clientHeight;
+  atBottom = d < 80;
+});
+
+function scrollDown() {
+  msgsEl.scrollTo({ top: msgsEl.scrollHeight, behavior: 'smooth' });
+}
+
+/* Input Auto-resize */
+inputEl.addEventListener('input', () => {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + 'px';
+  sendEl.classList.toggle('show', inputEl.value.trim().length > 0);
+});
+
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+
+/* Markdown Parser (Tera purana wala) */
+function parseMd(raw) {
+  let s = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, (_,c) => `<pre><code>${c.trim()}</code></pre>`);
+  s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+  s = s.replace(/\n/g, '<br>');
+  return s;
+}
+
+/* Add Bubble */
+function addBubble(role, text, stream = false) {
+  if (welcomeEl && !welcomeEl.classList.contains('gone')) {
+    welcomeEl.classList.add('gone');
+    setTimeout(() => welcomeEl.style.display = 'none', 400);
+  }
+
+  const isUser = role === 'user';
+  const row = document.createElement('div');
+  row.className = `msg-row ${role} b-last`;
+
+  const bw = document.createElement('div');
+  bw.className = 'bw';
+  const bub = document.createElement('div');
+  bub.className = 'bub';
+  if (!stream) bub.innerHTML = parseMd(text);
+
+  bw.appendChild(bub);
+  row.appendChild(bw);
+  innerEl.insertBefore(row, typingEl);
+  
+  lastRole = role;
+  scrollDown();
+  return bub;
+}
+
+/* Typing Stream Animation */
+async function streamText(bub, text) {
+  const tokens = text.split(/(\s+)/);
+  let out = '';
+  for (let i = 0; i < tokens.length; i++) {
+    out += tokens[i];
+    bub.innerHTML = parseMd(out);
+    scrollDown();
+    await new Promise(r => setTimeout(r, 15 + Math.random()*15));
+  }
+}
+
+/* SEND FUNCTION (FIXED FOR BACKEND) */
+async function send() {
+  const text = inputEl.value.trim();
   if (!text || loading) return;
 
   inputEl.value = '';
@@ -850,43 +959,44 @@ async function send(preset) {
   sendEl.classList.remove('show');
 
   addBubble('user', text);
-  history.push({ role: "user", content: text });
+  history.push({ role: 'user', content: text });
 
   loading = true;
-  sendEl.disabled = true;
-  await new Promise(r => setTimeout(r, 380));
-  showTyping(true);
+  typingEl.style.display = 'flex';
+  scrollDown();
 
   try {
-    // Ye line aapke Vercel backend se baat karegi
+    // Calling your Vercel backend
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text })
+      body: JSON.stringify({ message: text, history: history })
     });
 
     const data = await res.json();
-    showTyping(false);
+    typingEl.style.display = 'none';
 
-    // Groq response format handle karna
     if (data.choices && data.choices[0].message) {
       const reply = data.choices[0].message.content;
-      history.push({ role: "assistant", content: reply });
+      history.push({ role: 'assistant', content: reply });
       const bub = addBubble('ai', '', true);
       await streamText(bub, reply);
     } else {
-      addBubble('ai', `⚠️ Error: Backend se sahi response nahi mila.`);
+      addBubble('ai', `⚠️ Error: ${data.error || 'Kuch galat hua'}`);
     }
   } catch (err) {
-    showTyping(false);
-    addBubble('ai', '⚠️ Connection fail! Check your Vercel Logs.');
+    typingEl.style.display = 'none';
+    addBubble('ai', '⚠️ Connection Issue. Dobara try karo!');
   }
 
   loading = false;
-  sendEl.disabled = false;
   inputEl.focus();
 }
 
+function clearChat() {
+  location.reload(); 
+}
+</script>
   </script>
 </body>
 </html>

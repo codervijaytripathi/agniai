@@ -840,160 +840,7 @@ body {
     </div>
   </div>
 </div>
-
 <script>
-/* ── PARTICLES ── */
-(function() {
-  const amb = document.querySelector('.ambient');
-  for (let i = 0; i < 22; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    const size = Math.random() * 3 + 1.5;
-    const dx = (Math.random() - 0.5) * 80;
-    p.style.cssText = `
-      left: ${Math.random() * 100}%;
-      bottom: -10px;
-      width: ${size}px;
-      height: ${size}px;
-      opacity: 0;
-      --dx: ${dx}px;
-      animation-duration: ${Math.random() * 12 + 10}s;
-      animation-delay: ${Math.random() * 12}s;
-      background: hsl(${230 + Math.random()*40}, 70%, 70%);
-    `;
-    amb.appendChild(p);
-  }
-})();
-
-/* ── CONFIG ── */
-const API_KEY = 'YOUR_API_KEY_HERE';
-const MODEL   = 'claude-sonnet-4-20250514';
-const SYSTEM  = `You are Agni AI — a warm, smart, and natural conversational assistant. You feel like a brilliant friend, not a robot. Always match the user's language and energy (Hindi, English, or Hinglish). Keep replies naturally sized — short when the question is simple, detailed when needed. Be thoughtful, occasionally witty. No robotic formatting unless truly helpful. Never mention you are Claude or made by Anthropic.`;
-
-let history  = [];
-let loading  = false;
-let lastRole = null;
-let atBottom = true;
-
-const msgsEl    = document.getElementById('messages');
-const innerEl   = document.querySelector('.msgs-inner');
-const typingEl  = document.getElementById('typing-row');
-const welcomeEl = document.getElementById('welcome');
-const inputEl   = document.getElementById('user-input');
-const sendEl    = document.getElementById('send-btn');
-const pillEl    = document.getElementById('scroll-pill');
-
-/* Scroll */
-msgsEl.addEventListener('scroll', () => {
-  const d = msgsEl.scrollHeight - msgsEl.scrollTop - msgsEl.clientHeight;
-  atBottom = d < 80;
-  pillEl.style.display = atBottom ? 'none' : 'flex';
-});
-
-function scrollDown(force) {
-  if (force || atBottom) {
-    msgsEl.scrollTo({ top: msgsEl.scrollHeight, behavior: 'smooth' });
-    atBottom = true;
-    pillEl.style.display = 'none';
-  }
-}
-
-/* Input */
-inputEl.addEventListener('input', () => {
-  inputEl.style.height = 'auto';
-  inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + 'px';
-  sendEl.classList.toggle('show', inputEl.value.trim().length > 0);
-});
-inputEl.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-});
-
-/* Utils */
-function now() {
-  return new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-}
-
-function parseMd(raw) {
-  let s = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, (_,c) => `<pre><code>${c.trim()}</code></pre>`);
-  s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
-  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  s = s.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
-  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-  s = s.replace(/\n/g, '<br>');
-  return s;
-}
-
-/* Add bubble */
-function addBubble(role, text, stream = false) {
-  if (!welcomeEl.classList.contains('gone')) {
-    welcomeEl.classList.add('gone');
-    setTimeout(() => welcomeEl.style.display = 'none', 400);
-  }
-
-  const isUser = role === 'user';
-  const sameGroup = role === lastRole;
-
-  if (sameGroup) {
-    innerEl.querySelectorAll(`.msg-row.${role}`).forEach(r => {
-      r.classList.remove('b-last');
-      r.classList.add('b-mid');
-      r.querySelector('.m-av')?.classList.add('hide');
-    });
-  }
-
-  const row = document.createElement('div');
-  row.className = `msg-row ${role} b-last ${sameGroup ? '' : 'gap'}`;
-
-  const av = document.createElement('div');
-  av.className = `m-av ${isUser ? 'user' : 'ai'}`;
-  av.textContent = isUser ? 'U' : 'Ag';
-
-  const bw = document.createElement('div');
-  bw.className = 'bw';
-
-  const bub = document.createElement('div');
-  bub.className = 'bub';
-  if (!stream) bub.innerHTML = parseMd(text);
-
-  const time = document.createElement('div');
-  time.className = 'm-time';
-  time.textContent = now();
-
-  bw.appendChild(bub);
-  bw.appendChild(time);
-
-  if (isUser) { row.appendChild(bw); row.appendChild(av); }
-  else        { row.appendChild(av); row.appendChild(bw); }
-
-  innerEl.insertBefore(row, typingEl);
-  lastRole = role;
-  scrollDown();
-  return bub;
-}
-
-/* Stream text */
-async function streamText(bub, text) {
-  const tokens = text.split(/(\s+)/);
-  let out = '';
-  for (let i = 0; i < tokens.length; i++) {
-    out += tokens[i];
-    bub.innerHTML = parseMd(out);
-    scrollDown();
-    const w = tokens[i].trim();
-    const d = /[.!?…]$/.test(w) ? 28 + Math.random()*22 :
-              /[,;:]$/.test(w)  ? 14 + Math.random()*10 :
-                                   5  + Math.random()*10;
-    await new Promise(r => setTimeout(r, d));
-  }
-}
-
-function showTyping(v) {
-  typingEl.style.display = v ? 'flex' : 'none';
-  if (v) scrollDown();
-}
-
-/* Send */
 async function send(preset) {
   const text = preset || inputEl.value.trim();
   if (!text || loading) return;
@@ -1003,13 +850,7 @@ async function send(preset) {
   sendEl.classList.remove('show');
 
   addBubble('user', text);
-  history.push({ role: 'user', content: text });
-
-  const ci = document.getElementById('active-convo');
-  if (ci && history.length === 1) {
-    const label = text.length > 28 ? text.slice(0,28)+'…' : text;
-    ci.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${label}`;
-  }
+  history.push({ role: "user", content: text });
 
   loading = true;
   sendEl.disabled = true;
@@ -1017,29 +858,28 @@ async function send(preset) {
   showTyping(true);
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    // Ye line aapke Vercel backend se baat karegi
+    const res = await fetch('/api/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({ model: MODEL, max_tokens: 1200, system: SYSTEM, messages: history })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text })
     });
+
     const data = await res.json();
     showTyping(false);
-    if (data.content?.[0]?.text) {
-      const reply = data.content[0].text;
-      history.push({ role: 'assistant', content: reply });
+
+    // Groq response format handle karna
+    if (data.choices && data.choices[0].message) {
+      const reply = data.choices[0].message.content;
+      history.push({ role: "assistant", content: reply });
       const bub = addBubble('ai', '', true);
       await streamText(bub, reply);
     } else {
-      addBubble('ai', `⚠️ ${data.error?.message || 'Kuch error hua.'}`);
+      addBubble('ai', `⚠️ Error: Backend se sahi response nahi mila.`);
     }
-  } catch {
+  } catch (err) {
     showTyping(false);
-    addBubble('ai', '⚠️ Connection issue. Dobara try karo!');
+    addBubble('ai', '⚠️ Connection fail! Check your Vercel Logs.');
   }
 
   loading = false;
@@ -1047,20 +887,6 @@ async function send(preset) {
   inputEl.focus();
 }
 
-function qs(t) { send(t); }
-
-function clearChat() {
-  history = []; lastRole = null;
-  innerEl.querySelectorAll('.msg-row').forEach(e => e.remove());
-  welcomeEl.style.display = 'flex';
-  welcomeEl.classList.remove('gone');
-  showTyping(false);
-  const ci = document.getElementById('active-convo');
-  if (ci) ci.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> New conversation`;
-  inputEl.focus();
-}
-
-inputEl.focus();
-</script>
+  </script>
 </body>
 </html>

@@ -1,15 +1,10 @@
 export default async function handler(req, res) {
-  // Sirf POST request allow karo
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   const { message } = req.body;
   const apiKey = process.env.GROQ_API_KEY;
-
-  if (!apiKey) {
-    return res.status(500).json({ error: "Vercel mein API Key nahi mil rahi!" });
-  }
 
   try {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -25,8 +20,14 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    
+    // Agar Groq se error aaye toh wo dikhao
+    if (data.error) {
+      return res.status(500).json({ error: data.error.message });
+    }
+
     return res.status(200).json(data);
   } catch (error) {
-    return res.status(500).json({ error: "Groq connectivity error: " + error.message });
+    return res.status(500).json({ error: "Backend error: " + error.message });
   }
 }

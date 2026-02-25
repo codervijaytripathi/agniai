@@ -2,99 +2,85 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AGNI AI | Future is Here</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AGNI AI | Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #ff4d00;
-            --secondary: #ff8700;
-            --bg: #0a0a0c;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --secondary: #ff1e00;
+            --bg: #050505;
+            --glass: rgba(255, 255, 255, 0.08);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
 
         body {
             background: var(--bg);
-            background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a0c 100%);
             color: white;
             height: 100vh;
+            /* Mobile browser height fix */
+            height: 100dvh; 
             display: flex;
             justify-content: center;
-            align-items: center;
             overflow: hidden;
         }
 
-        .chat-container {
+        /* Animated Background Blobs */
+        .bg-glow {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255, 77, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 30, 0, 0.1) 0%, transparent 50%);
+            filter: blur(80px);
+        }
+
+        .main-container {
             width: 100%;
-            max-width: 900px;
-            height: 90vh;
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
+            max-width: 600px;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            margin: 20px;
-            animation: fadeIn 0.8s ease-out;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255,255,255,0.05);
+            border-right: 1px solid rgba(255,255,255,0.05);
         }
 
         header {
-            padding: 20px 30px;
-            border-bottom: 1px solid var(--glass-border);
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.6);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
             display: flex;
             align-items: center;
-            gap: 15px;
+            justify-content: space-between;
         }
 
-        .logo-dot {
-            width: 12px;
-            height: 12px;
-            background: var(--primary);
-            border-radius: 50%;
-            box-shadow: 0 0 15px var(--primary);
-            animation: pulse 2s infinite;
-        }
-
-        header h1 {
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-            background: linear-gradient(to right, #fff, var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .dot { width: 10px; height: 10px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 10px #00ff88; }
+        header h1 { font-size: 1.1rem; letter-spacing: 1px; }
 
         #chat-box {
             flex: 1;
-            padding: 30px;
             overflow-y: auto;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            scroll-behavior: smooth;
+            gap: 15px;
+            scrollbar-width: none; /* Firefox */
         }
-
-        /* Scrollbar Styling */
-        #chat-box::-webkit-scrollbar { width: 5px; }
-        #chat-box::-webkit-scrollbar-track { background: transparent; }
-        #chat-box::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+        #chat-box::-webkit-scrollbar { display: none; } /* Chrome/Safari */
 
         .message {
-            max-width: 80%;
-            padding: 14px 20px;
+            max-width: 85%;
+            padding: 12px 16px;
             border-radius: 18px;
             font-size: 0.95rem;
-            line-height: 1.6;
-            animation: slideUp 0.4s ease-out forwards;
-            position: relative;
+            line-height: 1.5;
+            animation: slideUp 0.3s ease-out;
+            word-wrap: break-word;
         }
 
         .user-message {
@@ -107,77 +93,85 @@
         .bot-message {
             align-self: flex-start;
             background: var(--glass);
-            border: 1px solid var(--glass-border);
-            color: #e0e0e0;
+            border: 1px solid rgba(255,255,255,0.1);
             border-bottom-left-radius: 4px;
         }
 
+        /* Fixed Bottom Input Area */
         .input-area {
-            padding: 25px 30px;
-            background: rgba(0,0,0,0.2);
-            border-top: 1px solid var(--glass-border);
+            padding: 15px 20px 25px 20px; /* Extra bottom padding for mobile gestures */
+            background: rgba(0,0,0,0.4);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .input-bar {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 30px;
+            padding: 6px 6px 6px 15px;
             display: flex;
-            gap: 15px;
+            align-items: center;
+            transition: 0.3s;
+        }
+
+        .input-bar:focus-within {
+            border-color: var(--primary);
+            background: rgba(255,255,255,0.12);
         }
 
         input {
             flex: 1;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            padding: 15px 25px;
-            border-radius: 14px;
+            background: transparent;
+            border: none;
             color: white;
             outline: none;
-            transition: 0.3s;
-        }
-
-        input:focus {
-            border-color: var(--primary);
-            background: rgba(255,255,255,0.08);
+            padding: 10px 0;
+            font-size: 1rem;
         }
 
         button {
             background: white;
             color: black;
             border: none;
-            padding: 0 30px;
-            border-radius: 14px;
-            font-weight: 700;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             cursor: pointer;
-            transition: 0.3s;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            transition: 0.2s;
         }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(255,255,255,0.1);
-        }
+        button:hover { transform: scale(1.05); background: var(--primary); color: white; }
 
-        /* Animations */
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        @media (max-width: 600px) {
-            .chat-container { height: 100vh; margin: 0; border-radius: 0; }
-            .message { max-width: 90%; }
-        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div class="chat-container">
+<div class="bg-glow"></div>
+
+<div class="main-container">
     <header>
-        <div class="logo-dot"></div>
-        <h1>AGNI AI</h1>
+        <div class="brand">
+            <div class="dot"></div>
+            <h1>AGNI AI</h1>
+        </div>
+        <small style="opacity: 0.5;">v2.0 Beta</small>
     </header>
-    
+
     <div id="chat-box">
-        <div class="message bot-message">नमस्ते! मैं अग्नि AI हूँ। मैं आपकी कैसे मदद कर सकता हूँ?</div>
+        <div class="message bot-message">नमस्ते! अग्नि AI अब पहले से ज्यादा स्मार्ट और बेहतर है। मैं आपकी क्या सेवा कर सकता हूँ? 🔥</div>
     </div>
 
     <div class="input-area">
-        <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off">
-        <button onclick="sendMessage()">SEND</button>
+        <div class="input-bar">
+            <input type="text" id="user-input" placeholder="Ask Agni anything..." autocomplete="off">
+            <button onclick="sendMessage()">➔</button>
+        </div>
     </div>
 </div>
 
@@ -186,232 +180,47 @@
     const userInput = document.getElementById('user-input');
 
     async function sendMessage() {
-        const message = userInput.value.trim();
-        if (!message) return;
+        const text = userInput.value.trim();
+        if(!text) return;
 
-        // User Message UI
-        addMessage(message, 'user-message');
+        addMsg(text, 'user-message');
         userInput.value = '';
 
-        // Typing Indicator
-        const typingDiv = addMessage('...', 'bot-message');
+        const loader = addMsg('Generating...', 'bot-message');
 
         try {
-            const response = await fetch(window.location.origin + '/api/chat', {
+            const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message })
+                body: JSON.stringify({ message: text })
             });
+            const data = await res.json();
+            loader.remove();
 
-            const data = await response.json();
-            typingDiv.remove();
-
-            if (data.choices && data.choices[0].message.content) {
-                addMessage(data.choices[0].message.content, 'bot-message');
+            if(data.choices) {
+                addMsg(data.choices[0].message.content, 'bot-message');
             } else {
-                addMessage("Maafi chahta hoon, kuch error aaya.", 'bot-message');
+                addMsg("Error: Response nahi mila.", 'bot-message');
             }
-        } catch (error) {
-            typingDiv.remove();
-            addMessage("Server connection fail!", 'bot-message');
+        } catch(e) {
+            loader.remove();
+            addMsg("Server connection error!", 'bot-message');
         }
     }
 
-    function addMessage(text, className) {
-        const div = document.createElement('div');
-        div.className = `message ${className}`;
-        div.innerText = text;
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
-        return div;
+    function addMsg(text, type) {
+        const d = document.createElement('div');
+        d.className = `message ${type}`;
+        d.innerText = text;
+        chatBox.appendChild(d);
+        chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+        return d;
     }
 
-    userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
+    userInput.addEventListener('keypress', e => {
+        if(e.key === 'Enter') sendMessage();
     });
 </script>
 
 </body>
 </html>
-
-<!--
-
-    <script>
-        /* --- JavaScript (Poora Logic Isme Hai) --- */
-        let chatHistory = [];
-        let isLoading = false;
-
-        const chatMessagesEl = document.getElementById('chat-messages');
-        const userInputEl = document.getElementById('user-input');
-        const sendButtonEl = document.getElementById('send-button');
-        const welcomeScreenEl = document.getElementById('welcome-screen');
-        const typingIndicatorEl = document.getElementById('typing-indicator');
-
-        // --- Particle Background ---
-        (function() {
-            const container = document.querySelector('.particle-container');
-            if (!container) return; // Safeguard if container not found
-            const numParticles = 30;
-            for (let i = 0; i < numParticles; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
-                const size = Math.random() * 5 + 3; // 3 to 8px
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
-                particle.style.left = `${Math.random() * 100}%`;
-                particle.style.animationDuration = `${Math.random() * 8 + 10}s`; // 10 to 18s
-                particle.style.animationDelay = `${Math.random() * 10}s`; // Stagger animation start
-                container.appendChild(particle);
-            }
-        })();
-
-
-        // --- UI Utils ---
-        function parseMarkdown(text) {
-            // Basic markdown parsing for bold, italic, code, links, and new lines
-            let html = text
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // Escape HTML
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')     // Italic
-                .replace(/`([^`\n]+)`/g, '<code>$1</code>') // Inline code
-                .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>') // Code blocks
-                .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank">$1</a>') // Links
-                .replace(/\n/g, '<br>'); // Newlines to <br>
-            return html;
-        }
-
-        function scrollToBottom() {
-            chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-        }
-
-        function showTypingIndicator(show) {
-            if (show) {
-                typingIndicatorEl.classList.add('visible');
-            } else {
-                typingIndicatorEl.classList.remove('visible');
-            }
-            scrollToBottom();
-        }
-
-        function addMessage(role, text, isStreaming = false) {
-            if (welcomeScreenEl.classList.contains('hidden')) {
-                welcomeScreenEl.style.display = 'none'; // Ensure it's hidden after fade
-            } else {
-                welcomeScreenEl.classList.add('hidden'); // Start fade out
-                setTimeout(() => welcomeScreenEl.style.display = 'none', 500); // Hide after transition
-            }
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message-bubble', role);
-            
-            const contentDiv = document.createElement('div');
-            contentDiv.classList.add('content');
-            contentDiv.innerHTML = isStreaming ? '' : parseMarkdown(text); // For streaming, start empty
-
-            messageDiv.appendChild(contentDiv);
-            chatMessagesEl.appendChild(messageDiv);
-            scrollToBottom();
-            return contentDiv; // Return the content div for streaming
-        }
-
-        async function streamText(element, text) {
-            const words = text.split(/(\s+)/); // Split by words and spaces
-            let currentText = '';
-            for (let i = 0; i < words.length; i++) {
-                currentText += words[i];
-                element.innerHTML = parseMarkdown(currentText);
-                scrollToBottom();
-                const delay = words[i].length > 1 ? 25 : 10; // Shorter delay for spaces
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-        }
-
-        // --- Event Listeners ---
-        userInputEl.addEventListener('input', () => {
-            userInputEl.style.height = 'auto';
-            userInputEl.style.height = userInputEl.scrollHeight + 'px';
-            sendButtonEl.classList.toggle('active', userInputEl.value.trim().length > 0);
-        });
-
-        userInputEl.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-
-        sendButtonEl.addEventListener('click', () => {
-            if (!isLoading) {
-                sendMessage();
-            }
-        });
-
-        // --- Main Send Message Function ---
-        async function sendMessage(presetMessage = '') {
-            const userMessage = presetMessage || userInputEl.value.trim();
-            if (!userMessage || isLoading) return;
-
-            isLoading = true;
-            userInputEl.value = '';
-            userInputEl.style.height = '45px'; // Reset height
-            sendButtonEl.classList.remove('active');
-
-            addMessage('user', userMessage);
-            chatHistory.push({ role: 'user', content: userMessage });
-
-            showTypingIndicator(true);
-
-            try {
-                // index.html ke andar jahan fetch hai, use aise likho:
-                const response = await fetch(window.location.origin + '/api/chat', {method: 'POST',
-                 headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify({ message: userMessage, history: chatHistory })
-               });
-
-                const data = await response.json();
-                showTypingIndicator(false);
-
-                if (response.ok && data.choices && data.choices[0].message) {
-                    const aiReply = data.choices[0].message.content;
-                    chatHistory.push({ role: 'assistant', content: aiReply });
-                    const aiBubbleContent = addMessage('ai', '', true); // Add empty bubble for streaming
-                    await streamText(aiBubbleContent, aiReply); // Stream text into it
-                } else {
-                    addMessage('ai', `⚠️ Error: ${data.error?.message || 'Server se sahi jawab nahi mila. Vercel logs check karein.'}`);
-                }
-            } catch (error) {
-                console.error('Fetch error:', error);
-                showTypingIndicator(false);
-                addMessage('ai', '⚠️ Connection fail! Internet ya Vercel backend mein problem hai.');
-            } finally {
-                isLoading = false;
-                scrollToBottom();
-            }
-        }
-
-        function sendPreset(message) {
-            sendMessage(message);
-        }
-
-        function clearChat() {
-            chatHistory = [];
-            chatMessagesEl.innerHTML = ''; // Clear all messages
-            welcomeScreenEl.classList.remove('hidden'); // Show welcome screen
-            welcomeScreenEl.style.display = 'flex'; // Ensure display flex for welcome screen
-            userInputEl.value = '';
-            userInputEl.style.height = '45px';
-            sendButtonEl.classList.remove('active');
-            scrollToBottom();
-            // In a real app, you might also update chat history in the sidebar
-        }
-
-        // Initial setup
-        document.addEventListener('DOMContentLoaded', () => {
-            scrollToBottom();
-            userInputEl.focus();
-        });
-
-    </script>
-</body>
-</html>
--->
